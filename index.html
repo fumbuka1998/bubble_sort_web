@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubble Sort in C++ with WebAssembly</title>
+    <script src="sort.js"></script>
+    <style>
+        /* Reset some default styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7fa;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #4A90E2;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #4A90E2;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #357ABD;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            color: white;
+            background-color: #4A90E2;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #357ABD;
+        }
+
+        h2 {
+            font-size: 18px;
+            color: #4A90E2;
+            margin-top: 20px;
+        }
+
+        p#output {
+            font-size: 16px;
+            background-color: #f4f7fa;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            min-height: 40px;
+            margin-top: 10px;
+            color: #333;
+        }
+
+        footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bubble Sort with C++</h1>
+        <input type="text" id="numbers" placeholder="Enter integers separated by commas" />
+        <button id="sortButton">Sort</button>
+        <h2>Sorted Numbers:</h2>
+        <p id="output">Sorted numbers will appear here</p>
+        <footer>Powered by WebAssembly & C++</footer>
+    </div>
+
+    <script>
+        var sortModule;
+
+        // Load the module
+        createSortModule().then(function(module) {
+            sortModule = module;
+        });
+
+        document.getElementById('sortButton').onclick = function() {
+            const input = document.getElementById('numbers').value;
+            const numbers = input.split(',').map(Number);
+
+            if (!sortModule) {
+                console.error('Module is not loaded yet!');
+                return;
+            }
+
+            if (numbers.some(isNaN)) {
+                document.getElementById('output').textContent = "Please enter valid numbers!";
+                return;
+            }
+
+            const length = numbers.length;
+            const bytesPerElement = 4; // assuming 32-bit integers
+            const arrayPointer = sortModule._malloc(length * bytesPerElement);
+
+            // Place the numbers into WASM memory
+            sortModule.HEAP32.set(numbers, arrayPointer / bytesPerElement);
+
+            // Call the C++ sortNumbers function
+            sortModule._sortNumbers(arrayPointer, length);
+
+            // Get the sorted result from WASM memory
+            const sortedNumbers = new Int32Array(sortModule.HEAP32.buffer, arrayPointer, length);
+
+            // Display the output
+            document.getElementById('output').textContent = Array.from(sortedNumbers).join(', ');
+
+            // Free the memory
+            sortModule._free(arrayPointer);
+        };
+    </script>
+</body>
+</html>
