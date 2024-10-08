@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vowel or Consonant Checker</title>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f4f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            width: 80%;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #result {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+    </style>
+
+    <!-- Define Module object here -->
+    <script>
+        var Module = {
+            onRuntimeInitialized: function() {
+                // This function will be called once the WebAssembly module is fully loaded
+                const checkVowelOrConsonant = Module.cwrap('checkVowelOrConsonant', 'string', ['number']);
+
+                document.getElementById('checkButton').addEventListener('click', function() {
+                    const input = document.getElementById('inputChar').value;
+                    if (input.length !== 1 || !/[a-zA-Z]/.test(input)) {
+                        document.getElementById('result').textContent = 'Please enter a valid alphabet character.';
+                        return;
+                    }
+
+                    // Pass the character to WebAssembly (ASCII code)
+                    const charCode = input.charCodeAt(0);
+                    const result = checkVowelOrConsonant(charCode);
+                    document.getElementById('result').textContent = result;
+                });
+            }
+        };
+    </script>
+
+    <!-- Load the WebAssembly module AFTER defining the Module object -->
+    <script src="vowel_checker.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Vowel or Consonant Checker</h1>
+        <input type="text" id="inputChar" maxlength="1" placeholder="Enter a letter">
+        <br>
+        <button id="checkButton">Check</button>
+        <p id="result"></p>
+    </div>
+</body>
+</html>
